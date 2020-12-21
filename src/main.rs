@@ -2,8 +2,8 @@ use crate::{config::*, grpc::kv_client::*, server::*};
 use clap::Clap;
 use ethereum_tarpc_api::*;
 use tarpc::server::{Channel as _, Handler};
-use tokio::stream::StreamExt;
 use tokio_serde::formats::Bincode;
+use tokio_stream::StreamExt;
 
 mod api;
 mod config;

@@ -1,4 +1,6 @@
+use ethereum::Header;
 use ethereum_types::H256;
+use rlp_derive::RlpDecodable;
 use serde::Deserialize;
 use std::collections::BTreeSet;
 
@@ -49,4 +51,11 @@ impl ChainConfig {
         })
         .collect()
     }
+}
+
+#[derive(RlpDecodable)]
+pub struct BodyForStorage {
+    pub base_tx_id: u64,
+    pub tx_amount: u32,
+    pub uncles: Vec<Header>,
 }

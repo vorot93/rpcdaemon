@@ -7,21 +7,30 @@ license = "Apache-2.0"
 
 [dependencies]
 anyhow = "1"
-bytes = "0.6"
+arrayref = "0.3"
+async-stream = "0.3"
+bytes = "1"
 clap = "3.0.0-beta"
+ethereum = { git = "https://github.com/rust-blockchain/ethereum", branch = "vorot93/dev" }
 ethereum-tarpc-api = { git = "https://github.com/rust-ethereum/tarpc-api" }
 ethereum-types = { git = "https://github.com/paritytech/parity-common" }
 futures = "0.3"
 maplit = "1"
 parking_lot = "0.11"
 prost = "0.6"
+rlp = { git = "https://github.com/paritytech/parity-common" }
+rlp-derive = { git = "https://github.com/paritytech/parity-common" }
 serde = "1"
 serde_json = "1"
 tarpc = { version = "0.23", features = ["full"] }
-tokio = { version = "0.3", features = ["full"] }
-tokio-compat-02 = "0.1"
-tokio-serde = { version = "0.6", features = ["bincode"] }
+tokio = { version = "1", features = ["full"] }
+tokio-compat-02 = { git = "https://github.com/vorot93/tokio-compat-02", branch = "vorot93/tokio-1" }
+tokio-serde = { version = "0.8", features = ["bincode"] }
+tokio-stream = "0.1"
 tonic = { version = "0.3", features = ["tls"] }
 
 [build-dependencies]
 tonic-build = "0.3"
+
+[patch.crates-io]
+tarpc = { git = "https://github.com/google/tarpc" }
