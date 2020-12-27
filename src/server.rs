@@ -18,6 +18,7 @@ use tokio::sync::{
 };
 use tokio_stream::{Stream, StreamExt};
 use tonic::{transport::Channel, Streaming};
+use tracing::*;
 
 #[derive(Clone, Debug)]
 pub struct EthApiImpl {
@@ -45,6 +46,8 @@ impl Transaction {
 
         let bucket_name = bucket_name.to_string();
 
+        trace!("Sending request to open cursor");
+
         s.0.send(Cursor {
             op: Op::Open as i32,
             bucket_name: bucket_name.clone(),
@@ -56,6 +59,8 @@ impl Transaction {
 
         let id = s.1.message().await?.context("no response")?.cursor_id;
 
+        trace!("Opened cursor {}", id);
+
         drop(s);
 
         let (drop_handle, drop_rx) = oneshot();
@@ -65,6 +70,8 @@ impl Transaction {
             async move {
                 let _ = drop_rx.await;
                 let io = io.lock().await;
+
+                trace!("Closing cursor {}", id);
                 let _ =
                     io.0.send(Cursor {
                         op: Op::Close as i32,
@@ -181,6 +188,7 @@ impl<'tx> RemoteCursor<'tx> {
 
 impl EthApiImpl {
     pub async fn transaction(&self) -> anyhow::Result<Transaction> {
+        trace!("Opening transaction");
         let (sender, mut rx) = channel(1);
         let receiver = self
             .kv_client
@@ -192,6 +200,8 @@ impl EthApiImpl {
             })
             .await?
             .into_inner();
+
+        trace!("Acquired transaction receiver");
 
         Ok(Transaction {
             io: Arc::new(AsyncMutex::new((sender, receiver))),
