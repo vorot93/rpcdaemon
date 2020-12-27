@@ -1,4 +1,5 @@
 use crate::{config::*, grpc::kv_client::*, server::*};
+use anyhow::Context;
 use clap::Clap;
 use ethereum_tarpc_api::*;
 use tarpc::server::{Channel as _, Handler};
@@ -16,11 +17,14 @@ mod server;
 async fn real_main() -> anyhow::Result<()> {
     let opts = Opts::parse();
 
-    let kv_client = KvClient::connect(opts.kv_addr).await?;
+    let kv_client = KvClient::connect(opts.kv_addr)
+        .await
+        .context("failed to connect to remote database")?;
     let s = EthApiImpl { kv_client };
 
-    let mut listener =
-        tarpc::serde_transport::tcp::listen(&opts.listen_addr, Bincode::default).await?;
+    let mut listener = tarpc::serde_transport::tcp::listen(&opts.listen_addr, Bincode::default)
+        .await
+        .context("failed to start tarpc server")?;
     listener.config_mut().max_frame_length(4294967296);
     let mut l = listener
         // Ignore accept errors.
