@@ -28,6 +28,8 @@ tokio-compat-02 = { git = "https://github.com/vorot93/tokio-compat-02", branch =
 tokio-serde = { version = "0.8", features = ["bincode"] }
 tokio-stream = "0.1"
 tonic = { version = "0.3", features = ["tls"] }
+tracing = "0.1"
+tracing-subscriber = "0.2"
 
 [build-dependencies]
 tonic-build = "0.3"

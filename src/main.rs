@@ -5,6 +5,7 @@ use ethereum_tarpc_api::*;
 use tarpc::server::{Channel as _, Handler};
 use tokio_serde::formats::Bincode;
 use tokio_stream::StreamExt;
+use tracing_subscriber::EnvFilter;
 
 mod api;
 mod config;
@@ -15,6 +16,10 @@ mod models;
 mod server;
 
 async fn real_main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
     let opts = Opts::parse();
 
     let kv_client = KvClient::connect(opts.kv_addr)
