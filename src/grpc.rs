@@ -1,1 +1,1 @@
-tonic::include_proto!("tg_private_kv");
+tonic::include_proto!("remote");
