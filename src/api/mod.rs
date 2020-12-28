@@ -23,7 +23,14 @@ where
     type Out = BoxFuture<'static, Result<T, String>>;
 
     fn c(self) -> Self::Out {
-        Box::pin(async move { self.await.map_err(|e| e.to_string()) })
+        Box::pin(async move {
+            self.await.map_err(|e| {
+                e.chain()
+                    .map(|e| e.to_string())
+                    .collect::<Vec<_>>()
+                    .join(". ")
+            })
+        })
     }
 }
 

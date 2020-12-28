@@ -4,7 +4,9 @@ use rlp_derive::RlpDecodable;
 use serde::Deserialize;
 use std::collections::BTreeSet;
 
+#[allow(non_snake_case)]
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ChainConfig {
     chain_id: Option<u64>,
     homestead_block: Option<u64>,
@@ -19,7 +21,7 @@ pub struct ChainConfig {
     petersburg_block: Option<u64>,
     istanbul_block: Option<u64>,
     muir_glacier_block: Option<u64>,
-    yolov2_block: Option<u64>,
+    yoloV2_block: Option<u64>,
     ewasm_block: Option<u64>,
 }
 
@@ -36,7 +38,7 @@ impl ChainConfig {
             self.petersburg_block,
             self.istanbul_block,
             self.muir_glacier_block,
-            self.yolov2_block,
+            self.yoloV2_block,
             self.ewasm_block,
         ]
         .iter()

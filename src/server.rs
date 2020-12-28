@@ -69,7 +69,7 @@ impl Transaction {
             let io = self.io.clone();
             async move {
                 let _ = drop_rx.await;
-                let io = io.lock().await;
+                let mut io = io.lock().await;
 
                 trace!("Closing cursor {}", id);
                 let _ =
@@ -81,6 +81,7 @@ impl Transaction {
                         v: Default::default(),
                     })
                     .await;
+                let _ = io.1.next().await;
             }
         });
 
@@ -190,16 +191,28 @@ impl EthApiImpl {
     pub async fn transaction(&self) -> anyhow::Result<Transaction> {
         trace!("Opening transaction");
         let (sender, mut rx) = channel(1);
-        let receiver = self
+        let mut receiver = self
             .kv_client
             .clone()
             .tx(stream! {
+                // Just a dummy message really, see
+                // https://github.com/hyperium/tonic/issues/515
+                yield Cursor {
+                    op: Op::Open as i32,
+                    bucket_name: "TEST".into(),
+                    cursor: Default::default(),
+                    k: Default::default(),
+                    v: Default::default(),
+                };
                 while let Some(v) = rx.recv().await {
                     yield v;
                 }
             })
             .await?
             .into_inner();
+
+        // https://github.com/hyperium/tonic/issues/515
+        let _ = receiver.try_next().await?;
 
         trace!("Acquired transaction receiver");
 
@@ -211,9 +224,16 @@ impl EthApiImpl {
 
 impl Transaction {
     pub async fn read_canonical_hash(&self, block_num: u64) -> anyhow::Result<Option<H256>> {
-        let b = self
-            .get_one(HEADER_PREFIX, &header_hash_key(block_num))
-            .await?;
+        let key = header_hash_key(block_num);
+
+        trace!(
+            "Reading canonical hash of {} from bucket {} at {}",
+            block_num,
+            HEADER_PREFIX,
+            hex::encode(&key)
+        );
+
+        let b = self.get_one(HEADER_PREFIX, &key).await?;
 
         const L: usize = H256::len_bytes();
 
@@ -225,6 +245,8 @@ impl Transaction {
     }
 
     pub async fn read_header(&self, hash: H256, number: u64) -> anyhow::Result<Option<Header>> {
+        trace!("Reading header for block {}/{:?}", number, hash);
+
         let b = self
             .get_one(HEADER_PREFIX, &number_hash_composite_key(number, hash))
             .await?;
@@ -237,6 +259,8 @@ impl Transaction {
     }
 
     pub async fn get_block_number(&self, hash: H256) -> anyhow::Result<Option<u64>> {
+        trace!("Reading block number for hash {:?}", hash);
+
         let b = self
             .get_one(HEADER_NUMBER_PREFIX, &hash.to_fixed_bytes())
             .await?;
@@ -250,8 +274,19 @@ impl Transaction {
         }
     }
 
-    pub async fn read_chain_config(&self, genesis: H256) -> anyhow::Result<Option<ChainConfig>> {
-        let b = self.get_one(CONFIG_PREFIX, &genesis.as_bytes()).await?;
+    pub async fn read_chain_config(&self, block: H256) -> anyhow::Result<Option<ChainConfig>> {
+        let key = block.as_bytes();
+
+        trace!(
+            "Reading chain config for block {:?} from bucket {} at key {}",
+            block,
+            CONFIG_PREFIX,
+            hex::encode(&key)
+        );
+
+        let b = self.get_one(CONFIG_PREFIX, &key).await?;
+
+        trace!("Read chain config data: {}", hex::encode(&b));
 
         if b.is_empty() {
             return Ok(None);
@@ -261,6 +296,8 @@ impl Transaction {
     }
 
     pub async fn get_stage_progress(&self, stage: SyncStage) -> anyhow::Result<Option<u64>> {
+        trace!("Reading stage {:?} progress", stage);
+
         let b = self.get_one(SYNC_STAGE_PROGRESS, &stage).await?;
 
         if b.is_empty() {
@@ -282,6 +319,8 @@ impl Transaction {
         hash: H256,
         number: u64,
     ) -> anyhow::Result<Option<BodyForStorage>> {
+        trace!("Reading storage body for block {}/{:?}", number, hash);
+
         let b = self
             .get_one(BLOCK_BODY_PREFIX, &number_hash_composite_key(number, hash))
             .await?;
@@ -298,6 +337,12 @@ impl Transaction {
         base_tx_id: u64,
         amount: u32,
     ) -> anyhow::Result<Vec<ethereum::Transaction>> {
+        trace!(
+            "Reading {} transactions starting from {}",
+            amount,
+            base_tx_id
+        );
+
         Ok(if amount > 0 {
             let mut out = Vec::with_capacity(amount as usize);
 
@@ -325,6 +370,8 @@ impl Transaction {
         hash: H256,
         number: u64,
     ) -> anyhow::Result<Option<U256>> {
+        trace!("Reading totatl difficulty at block {}/{:?}", number, hash);
+
         let b = self
             .get_one(HEADER_PREFIX, &header_td_key(number, hash))
             .await?;
@@ -333,6 +380,8 @@ impl Transaction {
             return Ok(None);
         }
 
-        Ok(rlp::decode(&b)?)
+        trace!("Reading TD RLP: {}", hex::encode(&b));
+
+        Ok(Some(rlp::decode(&b)?))
     }
 }

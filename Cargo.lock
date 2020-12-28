@@ -1542,6 +1542,7 @@ dependencies = [
  "ethereum-tarpc-api",
  "ethereum-types",
  "futures",
+ "hex",
  "maplit",
  "parking_lot",
  "prost",

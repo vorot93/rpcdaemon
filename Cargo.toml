@@ -15,6 +15,7 @@ ethereum = { git = "https://github.com/rust-blockchain/ethereum", branch = "voro
 ethereum-tarpc-api = { git = "https://github.com/rust-ethereum/tarpc-api" }
 ethereum-types = { git = "https://github.com/paritytech/parity-common" }
 futures = "0.3"
+hex = "0.4"
 maplit = "1"
 parking_lot = "0.11"
 prost = "0.6"
