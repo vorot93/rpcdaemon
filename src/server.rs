@@ -195,11 +195,11 @@ impl EthApiImpl {
             .kv_client
             .clone()
             .tx(stream! {
-                // Just a dummy message really, see
+                // Just a dummy message, workaround for
                 // https://github.com/hyperium/tonic/issues/515
                 yield Cursor {
                     op: Op::Open as i32,
-                    bucket_name: "TEST".into(),
+                    bucket_name: "DUMMY".into(),
                     cursor: Default::default(),
                     k: Default::default(),
                     v: Default::default(),
@@ -212,6 +212,18 @@ impl EthApiImpl {
             .into_inner();
 
         // https://github.com/hyperium/tonic/issues/515
+        let cursor = receiver.message().await?.context("no response")?.cursor_id;
+
+        sender
+            .send(Cursor {
+                op: Op::Close as i32,
+                cursor,
+                bucket_name: Default::default(),
+                k: Default::default(),
+                v: Default::default(),
+            })
+            .await?;
+
         let _ = receiver.try_next().await?;
 
         trace!("Acquired transaction receiver");
