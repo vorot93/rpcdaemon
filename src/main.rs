@@ -1,6 +1,7 @@
-use crate::{config::*, grpc::kv_client::*, server::*};
+use crate::{config::*, server::*};
 use anyhow::Context;
 use clap::Clap;
+use ethdb::RemoteKvClient;
 use ethereum_tarpc_api::*;
 use tarpc::server::{Channel as _, Handler};
 use tokio_serde::formats::Bincode;
@@ -9,10 +10,6 @@ use tracing_subscriber::EnvFilter;
 
 mod api;
 mod config;
-#[allow(dead_code)]
-mod dbutils;
-mod grpc;
-mod models;
 mod server;
 
 async fn real_main() -> anyhow::Result<()> {
@@ -22,7 +19,7 @@ async fn real_main() -> anyhow::Result<()> {
 
     let opts = Opts::parse();
 
-    let kv_client = KvClient::connect(opts.kv_addr)
+    let kv_client = RemoteKvClient::connect(opts.kv_addr)
         .await
         .context("failed to connect to remote database")?;
     let s = EthApiImpl { kv_client };

@@ -1,11 +1,12 @@
 use crate::server::EthApiImpl;
 use ethereum::Header;
 use ethereum_tarpc_api::*;
-use ethereum_types::{H256, U256};
+use ethereum_types::{Address, H256, U256};
 use futures::future::BoxFuture;
 use std::future::Future;
 use tarpc::context;
 
+mod eth_account;
 mod eth_block;
 mod eth_system;
 
@@ -41,6 +42,8 @@ impl EthApi for EthApiImpl {
     type HeaderFut = BoxFuture<'static, Result<Option<Header>, String>>;
     type BodyFut = BoxFuture<'static, Result<Option<BlockBody>, String>>;
     type TotalDifficultyFut = BoxFuture<'static, Result<Option<U256>, String>>;
+    type BalanceFut = BoxFuture<'static, Result<Option<U256>, String>>;
+    type NonceFut = BoxFuture<'static, Result<Option<u64>, String>>;
 
     fn forks(self, _: context::Context) -> Self::ForksFut {
         self.get_forks().c()
@@ -64,5 +67,13 @@ impl EthApi for EthApiImpl {
 
     fn total_difficulty(self, _: context::Context, hash: H256) -> Self::TotalDifficultyFut {
         self.get_total_difficulty(hash).c()
+    }
+
+    fn balance(self, _: context::Context, block: H256, address: Address) -> Self::BalanceFut {
+        self.get_balance(block, address).c()
+    }
+
+    fn nonce(self, _: context::Context, block: H256, address: Address) -> Self::NonceFut {
+        self.get_nonce(block, address).c()
     }
 }

@@ -1,5 +1,6 @@
-use crate::{dbutils::*, server::EthApiImpl};
+use crate::server::EthApiImpl;
 use anyhow::Context;
+use ethdb::{SyncStage, TransactionExt};
 use ethereum::Header;
 use ethereum_tarpc_api::*;
 use ethereum_types::{H256, U256};

@@ -1,5 +1,6 @@
 use crate::server::EthApiImpl;
 use anyhow::Context;
+use ethdb::TransactionExt;
 use ethereum_tarpc_api::*;
 
 impl EthApiImpl {
