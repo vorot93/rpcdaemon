@@ -32,7 +32,7 @@ impl EthApiImpl {
     pub async fn get_header(self, hash: H256) -> anyhow::Result<Option<Header>> {
         let tx = self.transaction().await?;
         if let Some(number) = tx.get_block_number(hash).await? {
-            return Ok(tx.read_header(hash, number).await?);
+            return tx.read_header(hash, number).await;
         }
 
         Ok(None)
@@ -73,7 +73,7 @@ impl EthApiImpl {
             .await
             .context("failed to resolve hash to block number")?
         {
-            return Ok(tx.get_total_difficulty(hash, number).await?);
+            return tx.get_total_difficulty(hash, number).await;
         }
 
         Ok(None)

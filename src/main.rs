@@ -12,7 +12,8 @@ mod api;
 mod config;
 mod server;
 
-async fn real_main() -> anyhow::Result<()> {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
@@ -39,9 +40,4 @@ async fn real_main() -> anyhow::Result<()> {
     }
 
     Ok(())
-}
-
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    tokio_compat_02::FutureExt::compat(real_main()).await
 }
